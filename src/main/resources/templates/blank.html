@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorator="fragments/th-layout-admin-blank">
+<head layout:fragment="th-fragment-head">
+    <th:block layout:fragment="th-head">
+        <title>Admin</title>
+    </th:block>
+
+    <th:block layout:fragment="th-additional-css-lib">
+
+    </th:block>
+
+</head>
+
+<body class="">
+
+<!-- MAIN PANEL -->
+<div id="main" role="main" layout:fragment="th-fragment-content-main">
+    <div id="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="well well-sm well-light" style="height:100%">
+                    <div id="tabs">
+                        <ul id="tabheader"></ul>
+                        <div id="tabbody"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="divLiTemplate" style="display:none">
+        <li style="position:relative;" data-itemid="{ItemID}">
+        <span class="air air-top-left delete-tab" style="top:7px; left:7px;">
+            <button class="btn btn-xs font-xs btn-default hover-transparent">
+                <i class="fa fa-times"></i>
+            </button>
+        </span><span class="air air-top-left" style="top:7px; left:30px;">
+            <button class="btn btn-xs font-xs btn-default hover-transparent" onclick="javascript: BaseTab.NewWindow('{Url}')">
+                <i class="fa fa-expand"></i>
+            </button>
+        </span><a href="#{Href}" style="padding-left:55px;">{Title}</a>
+        </li>
+    </div>
+
+    <div id="divBodyTemplate" style="display:none">
+        <div id="{TabID}" style="padding:0px;">
+            <div style="padding:10px;">
+                <h1 class="txt-color-blueDark">
+                    <i class="fa fa-list-alt fa-fw "></i>
+                    {LocLabel}
+                </h1>
+            </div>
+            {IFrame}
+        </div>
+    </div>
+</div>
+<!-- END MAIN PANEL -->
+
+</body>
+
+</html>

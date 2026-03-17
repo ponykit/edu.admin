@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>로그인</title>
+    <meta charset="utf-8">
+    <meta name="description" content="UI framework for source share">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <link rel="stylesheet" type="text/css" media="screen" th:href="@{/css/bootstrap.min.css}">
+    <link  rel="stylesheet" type="text/css" media="screen" th:href="@{/css/reset.css}">
+    <link  rel="stylesheet" type="text/css" media="screen" th:href="@{/css/login.css}">
+
+    <script th:src="@{/js/libs/jquery-3.2.1.min.js}"></script>
+    <script th:src="@{/js/bootstrap/bootstrap.min.js}"></script>
+
+    <script src="/js/biz/serializeObject.js"></script>
+    <script src="/js/biz/callRestApi.js"></script>
+    <style>
+        label{
+            font-weight: unset;
+            display: block;
+        }
+        #myModal label{
+            text-align: left;
+        }
+        #adminLogin{
+            color: black;
+        }
+    </style>
+</head>
+<body id="adminLogin">
+<div id="container">
+  <div class="loginWrapper">
+    <div class="loginBg">
+      <svg width="2400px" height="200%">
+        <defs>
+          <filter id="blurLoginBg">
+            <fegaussianblur stddeviation="7" />
+          </filter>
+        </defs>
+        <image xlink:href="/img/login/login_bg.jpg" width="100%" height="100%" filter="url(#blurLoginBg)"></image>
+      </svg>
+    </div>
+    <div class="loginWrap">
+      <h1 class="logo">
+        <a href="#">
+          <img src="/img/logo.png" alt="admin">
+        </a>
+      </h1>
+      <div class="loginInnerWrap">
+        <form id="frmLogin" name='frmLogin' th:action="@{/login}" method="post">
+          <fieldset>
+            <legend class="blind">관리자</legend>
+            <div class="loginTitleWrap">
+              <strong class="loginTitle">강의관리</strong>
+            </div>
+            <section class="loginFormWrap">
+                <p class="loginText">로그인을 해주세요.</p>
+                <div class="inputBox">
+                    <label for="userID"></label>
+                    <input type="text" id="userID" name="username" placeholder="아이디"  required="required" title="아이디를 입력해주세요.">
+                </div>
+                <div class="inputBox">
+                    <label for="userID"></label>
+                    <input type="password" id="userPW" name="password" placeholder="비밀번호" required="required" autocomplete="off" title="비밀번호를 입력해주세요.">
+                </div>
+              <div class="checkBox">
+                <input type="checkbox" name="idRemb" id="idRemb" class="idRemb">
+                <label for="idRemb">아이디 저장</label>
+                <a href="#myModal" class="contactInfo" data-toggle="modal" data-target="#myModal">문의하기</a>
+              </div>
+              <div class="loginBtnBox">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <a id="btnLogin" type="submit">로그인</a>
+              </div>
+              
+              <p class="chromeDownText">
+                <span>크롬 브라우저에 최적화되어 있습니다. </span><a href="https://www.google.com/intl/ko_ALL/chrome" target="_blank">크롬 다운로드</a>
+            </section>
+          </fieldset>
+        </form>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<script>
+    $.nullToSpace = function(str) {
+        if(str == null || str == "null" || str == undefined) {
+            return "";
+        }else{
+            return str;
+        }
+    }
+
+    $(function() {
+
+        $("#btnLogin").click(function() {
+            frmLogin();
+        });
+
+        $('.loginFormWrap input[type="text"], input[type="password"]').keydown(function(e) {
+            if (e.keyCode === 13) {
+                frmLogin();
+            }
+        });
+
+        //로그인 실패 메시지 기능
+        /*<![CDATA[*/
+        var loginErrMsg = null;
+        /*]]>*/
+
+        if(loginErrMsg != null && loginErrMsg != '') alert(loginErrMsg);
+
+        //아이디 저장 기능
+        var userInputId = getCookie("username");
+
+        if(userInputId != ""){
+            $("input[name='username']").val(userInputId);
+            $("#idRemb").attr("checked", true); // ID 저장하기를 체크 상태로 두기.
+        }
+
+        $("#idRemb").change(function(){ // 체크박스에 변화가 있다면,
+            if($("#idRemb").is(":checked")){ // ID 저장하기 체크했을 때,
+                var userInputId = $("input[name='username']").val();
+                setCookie("username", userInputId, 7); // 7일 동안 쿠키 보관
+            }else{ // ID 저장하기 체크 해제 시,
+                deleteCookie("username");
+            }
+        });
+
+        // ID 저장하기를 체크한 상태에서 ID를 입력하는 경우, 이럴 때도 쿠키 저장.
+        $("input[name='username']").keyup(function(){ // ID 입력 칸에 ID를 입력할 때,
+            if($("#idRemb").is(":checked")){ // ID 저장하기를 체크한 상태라면,
+                var userInputId = $("input[name='username']").val();
+                setCookie("username", userInputId, 7); // 7일 동안 쿠키 보관
+            }
+        });
+    });
+
+    function frmLogin() {
+        var frmLogin = $("#frmLogin");
+
+        var username = frmLogin.find("input[name=username]");
+        var password = frmLogin.find("input[name=password]");
+
+        if($.nullToSpace(username.val()) == "") {
+            alert("아이디를 입력해주세요.");
+            username.focus();
+            return;
+        }
+
+        if($.nullToSpace(password.val()) == "") {
+            alert("비밀번호를 입력해주세요.");
+            password.focus();
+            return;
+        }
+
+        $("#frmLogin").submit();
+    }
+
+    function setCookie(cookieName, value, exdays){
+        var exdate = new Date();
+        exdate.setDate(exdate.getDate() + exdays);
+        var cookieValue = escape(value) + ((exdays==null) ? "" : "; expires=" + exdate.toGMTString());
+        document.cookie = cookieName + "=" + cookieValue;
+    }
+
+    function deleteCookie(cookieName){
+        var expireDate = new Date();
+        expireDate.setDate(expireDate.getDate() - 1);
+        document.cookie = cookieName + "= " + "; expires=" + expireDate.toGMTString();
+    }
+
+    function getCookie(cookieName) {
+        cookieName = cookieName + '=';
+        var cookieData = document.cookie;
+        var start = cookieData.indexOf(cookieName);
+        var cookieValue = '';
+        if(start != -1){
+            start += cookieName.length;
+            var end = cookieData.indexOf(';', start);
+            if(end == -1)end = cookieData.length;
+            cookieValue = cookieData.substring(start, end);
+        }
+        return unescape(cookieValue);
+    }
+</script>
+</body>
+</html>

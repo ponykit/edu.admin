@@ -1,0 +1,233 @@
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:with="http://www.thymeleaf.org/extras/with"
+      layout:decorate="~{layout/page-layout}"
+      with:title="강의리스트">
+
+<th:block layout:fragment="page-content">
+    <div class="widget-body">
+
+        <section id="widget-grid" class="">
+
+            <div class="row">
+
+                <!-- NEW COL START -->
+                <article class="col-sm-12 col-md-12 col-lg-12 sortable-grid ui-sortable">
+                    <div class="jarviswidget" id="" data-widget-editbutton="false" data-widget-deletebutton="false">
+                        <!-- widget div-->
+                        <div style="border-top:1px solid #ccc">
+                            <!-- widget content -->
+                            <div class="widget-body">
+                                <div class="form-horizontal">
+
+                                    <form id="resvesForm" name="resvesForm">
+                                        <div class="form-group">
+                                            <label class="control-label col-md-1"><strong>등록일자</strong></label>
+                                            <div class="col-md-2">
+                                                <div class="input-group">
+                                                    <input class="form-control _datePicker _from" id="startDate"
+                                                           type="text" placeholder="From">
+                                                    <span class="input-group-addon"><i
+                                                            class="fa fa-calendar"></i></span>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-1"
+                                                 style="text-align:center;max-width:30px;margin-top:5px;">
+                                                <span> ~ </span>
+                                            </div>
+
+                                            <div class="col-md-2">
+                                                <div class="input-group">
+                                                    <input class="form-control _datePicker _to" id="endDate" type="text"
+                                                           placeholder="To">
+                                                    <span class="input-group-addon"><i
+                                                            class="fa fa-calendar"></i></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="control-label col-md-1"><strong>강의명</strong></label>
+                                            <div class="col-md-4 ">
+                                                    <input class="form-control" id="title" name="title"
+                                                           type="text" maxlength="20">
+                                            </div>
+
+                                            <label class="control-label col-md-1"><strong>카테고리</strong></label>
+                                            <div class="col-md-4">
+                                                <select class="form-control" id="categoryId" name="categoryId">
+                                                    <option selected>전체</option>
+                                                    <option  th:each="item : ${categories}"
+                                                            th:value="${item.categoryId}"
+                                                            th:text="${item.categoryName}"/>
+                                                </select>
+                                            </div>
+                                        </div>
+
+
+                                        <hr>
+                                        <div class="form-group text-center">
+
+                                            <a class="btn btn-primary btn-sm" href="javascript:void(0);"
+                                               style="min-width:70px;" id="btnSearch">검색</a>
+
+                                            <a class="btn btn-default btn-sm" href="javascript:void(0);"
+                                               style="min-width:70px;" id="reset">초기화</a>
+                                        </div>
+                                        <hr>
+
+                                        <div class="form-group">
+                                            <div class="col-md-12">
+                                                <div class="realgrid_box">
+                                                    <div style="margin:auto">
+                                                        <!-- widget div-->
+                                                        <div role="content">
+                                                            <table id="grid-data" class="table table-bordered">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th data-headerAlign="center"
+                                                                        data-column-id="courseSeq" data-formatter="link"
+                                                                        data-order="desc"  data-header-align="center">ID
+                                                                    </th>
+                                                                    <th data-headerAlign="center"
+                                                                        data-column-id="categoryName"
+                                                                        data-sortable="false"  data-header-align="center">카테고리명
+                                                                    </th>
+                                                                    <th data-header-align="center" data-column-id="title"
+                                                                        data-order="asc">제목
+                                                                    </th>
+                                                                    <th data-header-align="center" data-column-id="price"
+                                                                        data-type="numeric" data-order="asc">가격
+                                                                    </th>
+                                                                    <th data-header-align="center"
+                                                                        data-column-id="badge">뱃지
+                                                                    </th>
+                                                                    <th data-header-align="center"
+                                                                        data-column-id="displayYn">전시여부
+                                                                    </th>
+                                                                    <th data-header-align="center" data-column-id="regDt"
+                                                                        data-formatter="ukdate"
+                                                                        data-order="desc">등록일
+                                                                    </th>
+                                                                </tr>
+                                                                </thead>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </form>
+
+                                </div>
+                            </div>
+                            <!-- end widget content -->
+                        </div>
+                        <!-- end widget div -->
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</th:block>
+
+<th:block layout:fragment="custom-script">
+    <link th:href="@{/js/plugin/jquery.bootgrid-1.3.1/jquery.bootgrid.css}" rel="stylesheet"/>
+    <script th:src="@{/js/plugin/jquery.bootgrid-1.3.1/jquery.bootgrid.js}"></script>
+    <script type="text/javascript">
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+
+        $(document).ready(function () {
+
+            pageSetUp();
+
+            //검색버튼
+            $("#btnSearch").click(fnSearch);
+
+            //날짜
+            COMMON.dateRangeConfig();
+            COMMON.dateRangePicker($("#startDate"), $("#endDate"));
+        });
+
+        //검색
+        var fnSearch = function () {
+            var startDate = $("#startDate").val();
+            var endDate = $("#endDate").val();
+            if (!COMMON.util.isDate(startDate) || !COMMON.util.isDate(endDate)) {
+                alert("정확한 날짜를 입력해주세요.")
+                return false;
+            }
+
+            $("#grid-data").bootgrid({
+                templates: {search: ""},
+                labels: {infos: '<strong class="text-primary"> {{ctx.total}}</strong>건이 검색되었습니다.'},
+                ajax: true,
+                ajaxSettings: {
+                    contentType: "application/json",
+                    method: "POST",
+                    cache: false,
+                    beforeSend : function(xhr) {
+                        xhr.setRequestHeader(header, token);
+                    },
+                },
+                url: "/api/course/list",
+                formatters: {
+                    "link": function (column, row) {
+                        return '<a href="#" onclick="gotoDetail(' + row.courseSeq + ', this)">' + row.courseSeq + '</a>';
+                    },
+                    "ukdate": function(column, row) {
+                        return moment.utc(row[column.id]).format('YYYY-MM-DD HH:mm');
+                    }
+                },
+                requestHandler: function (request) {
+                    var param = {
+                        Current: request.current,
+                        RowCount: request.rowCount,
+                        startDate: startDate,
+                        endDate: endDate,
+                        title : $("#title").val()
+                    };
+
+                    for (var key in request.sort) {
+                        param.SortBy = key;
+                        param.SortDirection = request.sort[key];
+                    }
+
+                    return JSON.stringify(param);
+                },
+                // responseHandler: function (data) {
+                //     var response = {
+                //         current: data.current,
+                //         rowCount: data.rowCount,
+                //         rows: data.rows,
+                //         total: data.total,
+                //         cantidad_totales: data.cantidad_totales,
+                //         id_pedido: data.id_pedido
+                //     };
+                //     //store cantidad_totales into a variable...
+                //     cantidadTotales = data.cantidad_totales;
+                //     $("#totalCnt").text(data.total);
+                //     return response;
+                // }
+            });
+        }
+
+        //상세페이지 이동
+        var gotoDetail = function(courseSeq, obj) {
+            var url =  '/courses/courses-detail?courseSeq='+ courseSeq;
+            parent.BaseTab.RemoveTab( "3_1");
+            return parent.BaseTab.AddTab("강의상세", "3_1", url, obj, "강의상세");
+        }
+
+    </script>
+</th:block>
+</html>

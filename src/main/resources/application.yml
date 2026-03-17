@@ -1,0 +1,81 @@
+server:
+  address: localhost
+  port: 9090
+
+spring:
+  profiles:
+    active: local
+  security:
+    user:
+      name: "admin"
+      password: "admin"
+
+application:
+  login:
+    form-uri: "/login"
+    default-uri: "/home/blank"
+
+---
+
+spring:
+  profiles: local
+  thymeleaf:
+    prefix: file:edu.admin/src/main/resources/templates/
+    cache: false
+
+  resources:
+    static-locations: file:edu.admin/src/main/resources/static/
+
+  datasource:
+    url: ${DB_URL:jdbc:log4jdbc:sqlserver://localhost:1433;databaseName=edu}
+    username: ${DB_USERNAME:edu}
+    password: ${DB_PASSWORD:your_password_here}
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+
+  servlet:
+    multipart:
+      enabled: true
+      max-request-size: -1
+      max-file-size: -1
+
+upload:
+  path: ${UPLOAD_PATH:/edu/file/upload}
+
+---
+
+spring:
+  profiles: prod
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    cache: true
+
+  resources:
+    static-locations: classpath:/static/
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+
+  servlet:
+    multipart:
+      enabled: true
+      max-request-size: -1
+      max-file-size: -1
+
+  devtools:
+    livereload:
+      enabled: false
+
+upload:
+  path: ${UPLOAD_PATH}
+
+logging:
+  level:
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql: trace

@@ -1,0 +1,102 @@
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:with="http://www.thymeleaf.org/extras/with"
+      layout:decorate="~{layout/page-layout}"
+      with:title="강의상세">
+
+<th:block layout:fragment="page-content">
+    <div class="widget-body">
+
+        <section id="widget-grid" class="">
+
+            <div class="row">
+                <div id="category" ></div>
+
+            </div>
+
+        </section>
+
+    </div>
+</th:block>
+<th:block layout:fragment="custom-script">
+    <link rel="stylesheet" th:href="@{/js/plugin/bootstraptree/bootstrap-treeview.css}">
+
+    <script th:src="@{/js/plugin/bootstraptree/bootstrap-treeview.js}"></script>
+    <script th:src="@{/js/plugin/jstree/jstree.js}"></script>
+    <script th:inline="javascript">
+
+        let categories = [[${categories}]];
+
+        let nodeList = [];
+
+        for(let i=0; i<categories.length; i++){
+
+            var category = categories[i];
+
+            var node = {
+                'id' : category.id,
+                'upper' : category.upper,
+                'text' : category.name,
+                "icon" : "md-folder",
+                'state': {
+                    'opened': true,
+                    'selected': true
+                }
+            };
+
+            if(node.upper != null) {
+                addChild(node.upper, node);
+            } else {
+                nodeList.push(node);
+            }
+
+        }
+
+        function addChild(upper, node) {
+
+            var upperNode = findNodeById(upper);
+
+            if(upperNode.children == null) {
+                upperNode.children = [];
+                upperNode.children.push(node);
+            } else {
+                upperNode.children.push(node);
+            }
+
+        }
+
+        function findNodeById(id) {
+            for(var i=0; i<nodeList.length; i++) {
+                if(id == nodeList[i].id) {
+                    return nodeList[i];
+                }
+            }
+        }
+
+
+        $(document).ready(function(){
+
+            $('#category').jstree({
+                'core': {
+                    'data': [
+                        {
+                            'text': '상품카테고리',
+                            "icon": "md-folder",
+                            'state': {
+                                'opened': true,
+                                'selected': true
+                            },
+                            'children': nodeList
+                        }
+                    ]
+                },
+                'plugins': ['checkbox']
+            });
+
+        });
+
+    </script>
+</th:block>
+</th:block>
+</html>

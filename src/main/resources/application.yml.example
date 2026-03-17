@@ -1,0 +1,55 @@
+# ================================================================
+# application.yml 설정 예시 파일
+# 이 파일을 복사하여 application.yml 또는 환경변수로 설정하세요.
+# ================================================================
+
+server:
+  address: localhost
+  port: 9090
+
+spring:
+  profiles:
+    active: local
+  security:
+    user:
+      name: "admin"
+      password: "your_admin_password"
+
+application:
+  login:
+    form-uri: "/login"
+    default-uri: "/home/blank"
+
+---
+
+spring:
+  profiles: local
+
+  datasource:
+    url: jdbc:log4jdbc:sqlserver://YOUR_DB_HOST:1433;databaseName=YOUR_DB_NAME
+    username: YOUR_DB_USERNAME
+    password: YOUR_DB_PASSWORD
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+
+  servlet:
+    multipart:
+      enabled: true
+      max-request-size: -1
+      max-file-size: -1
+
+upload:
+  path: /path/to/upload/directory
+
+---
+
+spring:
+  profiles: prod
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+
+upload:
+  path: ${UPLOAD_PATH}

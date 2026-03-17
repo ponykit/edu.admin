@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.admin.dao.CommonDao">
+    <select id="selectCommonCodeList" resultType="com.edu.admin.model.common.CommonCode">
+    SELECT  CODE
+            , CODE_NAME
+    FROM   TB_COMMON_CODE A
+    WHERE   1 = 1
+    <if test='codeType != "" and codeType != null '>
+        AND A.CODE_TYPE = #{codeType}
+    </if>
+    <if test='code != "" and code != null '>
+        AND A.CODE= #{code}
+    </if>
+    </select>
+
+    <select id="selectCategoryList" resultType="com.edu.admin.model.common.Category">
+    SELECT  CATEGORY_ID
+            , CATEGORY_UPPER
+            , CATEGORY_NAME
+    FROM    TB_CATEGORY
+    </select>
+
+    <insert id="insertFileTmp" parameterType="com.edu.admin.model.common.FileMeta">
+        INSERT INTO TB_FILES_TEMP
+        (
+        GROUP_KEY
+        , FILE_NAME
+        , FILE_URL
+        , FILE_SIZE
+        , THUMBNAIL_URL
+        , EXTENSION
+        , REG_DT
+        )
+        VALUES(
+        #{groupKey}
+        , #{fileName}
+        , #{fileUrl}
+        , #{fileSize}
+        , #{thumbnailUrl}
+        , #{extension}
+        , GETDATE()
+        )
+        <selectKey keyProperty="fileSeq" resultType="Integer" order="AFTER">
+            SELECT IDENT_CURRENT('TB_FILES_TEMP')
+        </selectKey>
+    </insert>
+
+    <delete id="deleteFileTmp" parameterType="com.edu.admin.model.common.FileMeta">
+    DELETE
+    FROM    TB_FILES_TEMP
+    WHERE   FILE_SEQ = #{fileSeq};
+    </delete>
+
+    <delete id="deleteFile" parameterType="com.edu.admin.model.common.FileMeta">
+    DELETE
+    FROM    TB_FILES
+    WHERE   FILE_SEQ = #{fileSeq};
+ </delete>
+</mapper>

@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.admin.dao.AdminDao">
+
+    <!-- 강의관련 -->
+    <insert id="mergeCourseInfo" parameterType="com.edu.admin.model.course.Course">
+        MERGE INTO TB_COURSE AS TG
+        USING ( SELECT #{courseSeq} AS COURSE_SEQ) AS SS ON (TG.COURSE_SEQ = SS.COURSE_SEQ)
+        WHEN NOT MATCHED THEN
+        INSERT (
+        TITLE
+        , CATEGORY_ID
+        , MAIN_IMG
+        , PRICE
+        , BADGE
+        , INTROD
+        , DISPLAY_YN
+        , CONTENT_DETAIL
+        )
+        VALUES(
+        #{title}
+        , #{categoryId}
+        , #{mainImg}
+        , #{price}
+        , #{badge}
+        , #{introd}
+        , #{displayYn}
+        , #{contentDetail}
+        )
+        WHEN MATCHED THEN
+        UPDATE
+        SET TITLE = #{title}
+        , CATEGORY_ID = #{categoryId}
+        , MAIN_IMG = #{mainImg}
+        , PRICE = #{price}
+        , BADGE = #{badge}
+        , INTROD = #{introd}
+        , DISPLAY_YN = #{displayYn}
+        , CONTENT_DETAIL = #{contentDetail}
+        ;
+        <selectKey keyProperty="courseSeq" resultType="Integer" order="AFTER">
+            DECLARE @COURSE_SEQ INT
+            SELECT @COURSE_SEQ = COURSE_SEQ
+            FROM TB_COURSE
+            WHERE COURSE_SEQ = #{courseSeq}
+
+            IF @COURSE_SEQ IS NULL
+            BEGIN
+            SELECT IDENT_CURRENT('TB_COURSE')
+            END
+            ELSE
+            BEGIN
+            SELECT @COURSE_SEQ
+            END
+
+        </selectKey>
+
+    </insert>
+
+    <insert id="mergeCourseDetailInfo" parameterType="com.edu.admin.model.course.CourseDetail">
+        MERGE INTO TB_COURSE_DETAIL AS TG
+        USING (
+                SELECT #{courseSeq}         AS COURSE_SEQ
+                        , #{courseDtlSeq}   AS COURSE_DTL_SEQ
+              ) AS SS ON (TG.COURSE_SEQ = SS.COURSE_SEQ AND TG.COURSE_DTL_SEQ = SS.COURSE_DTL_SEQ)
+        WHEN NOT MATCHED  THEN
+            INSERT ( COURSE_SEQ
+                    , UNIT_TITLE
+                    , DISPLAY_YN
+                    , SORT
+                    , FILE_SEQ
+                )
+            VALUES(
+                #{courseSeq}
+                , #{unitTitle}
+                , #{displayYn}
+                , #{sort}
+                , #{fileSeq}
+            )
+        WHEN  MATCHED  THEN
+                UPDATE
+                SET   UNIT_TITLE = #{unitTitle}
+                    , DISPLAY_YN = #{displayYn}
+                    , SORT       = #{sort}
+    ;
+    </insert>
+
+    <select id="selectCourseList" parameterType="map" resultType="com.edu.admin.model.course.Course">
+        <include refid="PaginationMapper.header"/>
+        SELECT A.COURSE_SEQ as courseSeq
+        , A.TITLE
+        , A.CATEGORY_ID
+        , B.CATEGORY_NAME AS categoryName
+        , A.PRICE
+        , A.BADGE
+        , A.DISPLAY_YN AS displayYn
+        , A.REG_DT AS regDt
+        FROM TB_COURSE A
+        INNER JOIN TB_CATEGORY B ON A.CATEGORY_ID = B.CATEGORY_ID
+        WHERE 1 = 1
+        <if test='startDate != "" and startDate != null and endDate != "" and endDate != null'>
+            AND A.REG_DT BETWEEN CAST(#{startDate} AS date) AND dateadd(day, 1 , CAST(#{endDate} AS date))
+        </if>
+        <if test='title != "" and title != null '>
+            AND A.TITLE LIKE #{title} + '%'
+        </if>
+        <include refid="PaginationMapper.footer">
+            <property name="SortBy" value="${SortBy}"/>
+            <property name="SortDirection" value="${SortDirection}"/>
+        </include>
+    </select>
+
+    <select id="selectCourseInfo" parameterType="map" resultType="com.edu.admin.model.course.Course">
+        SELECT A.COURSE_SEQ
+        , A.TITLE
+        , A.CATEGORY_ID
+        , A.PRICE
+        , A.BADGE
+        , A.DISPLAY_YN
+        , A.INTROD
+        , A.MAIN_IMG
+        , A.CONTENT_DETAIL
+        , A.REG_DT
+        FROM TB_COURSE A
+        WHERE   A.COURSE_SEQ = ${courseSeq}
+    </select>
+
+    <select id="selectCourseDetailInfo" parameterType="map" resultType="com.edu.admin.model.course.CourseDetail">
+        SELECT   A.COURSE_DTL_SEQ
+                 , A.COURSE_SEQ
+                 , A.UNIT_TITLE
+                 , A.DISPLAY_YN
+                 , A.SORT
+                 , A.FILE_SEQ
+                 , B.FILE_NAME
+                 , B.FILE_URL
+                 , B.FILE_SIZE
+                 , B.THUMBNAIL_URL
+        FROM    TB_COURSE_DETAIL A
+        OUTER APPLY (
+            SELECT   F.FILE_SEQ
+                    , F.FILE_NAME
+                    , F.FILE_URL
+                    , F.FILE_SIZE
+                    , F.USE_YN
+                    , F.THUMBNAIL_URL
+            FROM    TB_FILES F
+            WHERE   F.FILE_SEQ = A.FILE_SEQ
+        ) B
+        WHERE   A.COURSE_SEQ = ${courseSeq}
+    </select>
+
+    <select id="selectCoursetFiles" parameterType="map" resultType="com.edu.admin.model.common.FileVo">
+        SELECT   A.COURSE_SEQ
+                , A.FILE_NAME
+                , A.FILE_URL
+                , A.FILE_SIZE
+                , A.THUMBNAIL_URL
+                , A.USE_YN
+        FROM    TB_FILES A
+        WHERE   A.COURSE_SEQ = ${courseSeq}
+    </select>
+
+    <insert id="insertFilesTempToFiles" parameterType="map">
+
+    INSERT INTO TB_FILES
+    (
+        FILE_SEQ
+        , CON_SEQ
+        , FILE_NAME
+        , FILE_URL
+        , FILE_SIZE
+        , THUMBNAIL_URL
+        , USE_YN
+    )
+    SELECT  FILE_SEQ
+            , #{courseSeq}
+            , FILE_NAME
+            , FILE_URL
+            , FILE_SIZE
+            , THUMBNAIL_URL
+            , 1
+    FROM    TB_FILES_TEMP
+    WHERE   GROUP_KEY = #{groupKey}
+ </insert>
+
+    <select id="selectAdmin" parameterType="map" resultType="com.edu.admin.model.security.UserDto">
+
+    SELECT *
+    FROM    TB_ADMIN
+    WHERE   ADM_ID = #{admId}
+    </select>
+
+    <insert id="addAdminUser" parameterType="map">
+
+    INSERT INTO TB_ADMIN
+    (
+        ADM_ID
+        , ADM_PWD
+        , ADM_NAME
+        , ADM_EMAIL
+    )
+    VALUES (
+        #{admId}
+        , #{admPwd}
+        , #{admName}
+        , #{admEmail}
+    )
+ </insert>
+
+    <select id="selectBBSList" statementType="CALLABLE" parameterType="map" resultType="map">
+        <include refid="PaginationMapper.header"/>
+		SELECT
+         A.BoNode
+          , A.BoNode.ToString()						AS BoNodeText
+          , A.BoNode.GetAncestor(0).ToString()		AS ParentNode
+          , A.BoLevel
+          , A.BoNum
+          , A.BoCate
+          , dbo.GetCodeNm('BoCate', A.BoCate)		AS BoCateNM
+          , A.LinqSeq
+          , A.Subject
+          , A.UserId
+          , CONVERT(VARCHAR(16), A.RegDt, 121)	AS RegDate
+          , CASE WHEN A.BoLevel = 1 THEN (	SELECT	COUNT(*)
+                                                FROM	TB_BOARD B
+                                                WHERE	B.BoNode.ToString()	LIKE A.BoNode.ToString() + '%' ) -1
+                 ELSE 0 END AS CommentCnt
+          , (	SELECT	COUNT(*)
+                 FROM	dbo.TB_FILES AS BM
+                 WHERE	BM.CON_SEQ = A.BoNum)				AS FileCnt
+            , COUNT(*) OVER()   AS BoRowCnt
+        FROM		 dbo.TB_BOARD A
+     WHERE 1 = 1
+        <if test='startDate != "" and startDate != null and endDate != "" and endDate != null'>
+            AND A.RegDt BETWEEN CAST(#{startDate} AS date) AND dateadd(day, 1 , CAST(#{endDate} AS date))
+        </if>
+        <if test='title != "" and title != null '>
+            AND A.Subject LIKE #{title} + '%'
+        </if>
+        <include refid="PaginationMapper.footer">
+            <property name="SortBy" value="${SortBy}"/>
+            <property name="SortDirection" value="${SortDirection}"/>
+        </include>
+	</select>
+
+    <select id="selectBBSDetail" statementType="CALLABLE" parameterType="map" resultType="map">
+		SELECT		boA.BoNum
+                    , boA.BoCate				--카테고리
+                    , boA.Subject				--제목
+                    , boA.Content               --내용
+				    , ''			AS ImageList
+         FROM		dbo.TB_BOARD	AS boA
+         WHERE		BoNum	= #{BoNum}
+	</select>
+
+    <insert id="insertBBS" statementType="CALLABLE" parameterType="map">
+		{call BOARD_ADMIN_INSERT(
+            #{BoNum, mode=IN, jdbcType=INTEGER, javaType=int},
+            #{BoCate, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{BizCode, mode=IN, jdbcType=INTEGER, javaType=int},
+            #{LinqSeq, mode=IN, jdbcType=INTEGER, javaType=int},
+            #{Subject, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{Content, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{UserId, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{UserPwd, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{UserName, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{UserEmail, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{UserHomepage, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{UserContact, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{UserIp, mode=IN, jdbcType=VARCHAR, javaType=string}
+		)}
+	</insert>
+
+    <update id="updateBBS" statementType="CALLABLE" parameterType="map">
+		{call BOARD_ADMIN_UPDATE(
+            #{BoNum, mode=IN, jdbcType=INTEGER, javaType=int},
+            #{BoCate, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{BizCode, mode=IN, jdbcType=INTEGER, javaType=int},
+            #{Subject, mode=IN, jdbcType=VARCHAR, javaType=string},
+            #{Content, mode=IN, jdbcType=VARCHAR, javaType=string}
+		)}
+	</update>
+</mapper>

@@ -1,0 +1,390 @@
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:with="http://www.thymeleaf.org/extras/with"
+      layout:decorate="~{layout/page-layout}"
+      with:title="게시판관리">
+
+<th:block layout:fragment="page-content">
+    <div class="widget-body">
+        <section id="widget-grid" class="">
+            <div class="row " >
+                <!-- NEW COL START -->
+                <article class="col-xs-12 col-sm-6 col-md-6 col-lg-6 sortable-grid ui-sortable">
+                    <div class="jarviswidget jarviswidget-sortable" data-widget-colorbutton="false"
+                         data-widget-editbutton="false" data-widget-togglebutton="false"
+                         data-widget-deletebutton="false">
+                        <header>
+                            <h2><strong>조회</strong></h2>
+                        </header>
+
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="form-horizontal ">
+
+                                <form id="resvesForm" name="resvesForm">
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2"><strong>등록일자</strong></label>
+                                        <div class="col-md-4">
+                                            <div class="input-group">
+                                                <input class="form-control _datePicker _from" id="startDate"
+                                                       type="text" placeholder="From">
+                                                <span class="input-group-addon"><i
+                                                        class="fa fa-calendar"></i></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-1"
+                                             style="text-align:center;max-width:30px;margin-top:5px;">
+                                            <span> ~ </span>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="input-group">
+                                                <input class="form-control _datePicker _to" id="endDate" type="text"
+                                                       placeholder="To">
+                                                <span class="input-group-addon"><i
+                                                        class="fa fa-calendar"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2"><strong>제목</strong></label>
+                                        <div class="col-md-7">
+                                            <input class="form-control" id="title" name="title"
+                                                   type="text" maxlength="20">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2"><strong>카테고리</strong></label>
+                                        <div class="col-md-4">
+                                            <select class="form-control" id="categoryId" name="categoryId">
+                                                <option selected>전체</option>
+                                                <option th:each="item : ${boCateList}"
+                                                        th:value="${item.code}"
+                                                        th:text="${item.codeName}"/>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="form-group text-center">
+
+                                        <a class="btn btn-primary btn-sm" href="javascript:void(0);"
+                                           style="min-width:70px;" id="btnSearch">검색</a>
+
+                                        <a class="btn btn-default btn-sm" href="javascript:void(0);"
+                                           style="min-width:70px;" id="btnSearchReset">초기화</a>
+                                    </div>
+                                    <hr>
+
+                                    <div class="form-group">
+                                        <div class="col-md-12">
+                                            <div style="margin:auto">
+                                                <!-- widget div-->
+                                                <div role="content">
+                                                    <table id="grid-data" class="table table-bordered">
+                                                        <thead>
+                                                        <tr>
+                                                            <th data-headerAlign="center"
+                                                                data-column-id="BoNum" data-formatter="link"
+                                                                data-order="desc" data-header-align="center">Num
+                                                            </th>
+                                                            <th data-headerAlign="center"
+                                                                data-column-id="BoCateNM"
+                                                                data-sortable="false" data-header-align="center">
+                                                                카테고리
+                                                            </th>
+                                                            <th data-header-align="center" data-column-id="Subject"
+                                                                data-order="asc">제목
+                                                            </th>
+
+                                                            <th data-header-align="center"
+                                                                data-column-id="UserId">등록자
+                                                            </th>
+                                                            <th data-header-align="center" data-column-id="regDt"
+                                                                data-formatter="ukdate"
+                                                                data-order="desc">등록일
+                                                            </th>
+                                                        </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </form>
+
+                            </div>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                </article>
+                <article class="col-xs-12 col-sm-6 col-md-6 col-lg-6 sortable-grid ui-sortable">
+                    <div class="jarviswidget jarviswidget-sortable" data-widget-colorbutton="false"
+                         data-widget-editbutton="false" data-widget-togglebutton="false"
+                         data-widget-deletebutton="false">
+                        <header>
+                            <h2><strong>상세정보</strong></h2>
+                        </header>
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="form-horizontal ">
+                                <div id="boardFrom" class="form-horizontal">
+                                    <input id="BoNum" name="BoNum" type="hidden"/>
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2"><strong>제목</strong></label>
+                                        <div class="col-md-10">
+                                            <input class="form-control" placeholder="" type="text" maxlength="100"
+                                                   id="Subject" name="Subject">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2"><strong>카테고리</strong></label>
+                                        <div class="col-md-4">
+                                            <select class="form-control" id="BoCate" name="BoCate">
+                                                <option th:each="item : ${boCateList}"
+                                                        th:value="${item.code}"
+                                                        th:text="${item.codeName}"/>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2"><strong>내용</strong></label>
+                                        <div class="col-md-10">
+                                           	<textarea id="contentDetail">
+
+				                			</textarea>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="form-group">
+                                        <div class="form-group text-center">
+
+                                            <a class="btn btn-primary" href="javascript:void(0);"
+                                               style="min-width:70px;" id="btnSave">저장</a>
+
+                                            <a class="btn btn-default" href="javascript:void(0);"
+                                               style="min-width:70px;" id="boardReset">초기화</a>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </div>
+</th:block>
+
+<th:block layout:fragment="custom-script">
+    <link th:href="@{/js/plugin/jquery.bootgrid-1.3.1/jquery.bootgrid.css}" rel="stylesheet"/>
+    <script th:src="@{/js/plugin/jquery.bootgrid-1.3.1/jquery.bootgrid.js}"></script>
+    <script th:src="@{/js/plugin/jquery-media/jquery.medea.js}"></script>
+    <script th:src="@{/js/plugin/ckeditor5/build/ckeditor.js}"></script>
+
+    <script type="text/javascript">
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+
+        $(document).ready(function () {
+
+            pageSetUp();
+
+            //날짜
+            COMMON.dateRangeConfig();
+            COMMON.dateRangePicker($("#startDate"), $("#endDate"));
+
+            //내용상세
+            ClassicEditor
+                .create(document.querySelector('#contentDetail'), {
+                    toolbar: {
+                        items: [
+                            'heading',
+                            '|',
+                            'fontBackgroundColor',
+                            'fontColor',
+                            'fontSize',
+                            'fontFamily',
+                            'bold',
+                            'italic',
+                            '|',
+                            'insertTable',
+                            'removeFormat',
+                            'strikethrough',
+                            'underline',
+                            'blockQuote',
+                            '|',
+                            'bulletedList',
+                            'numberedList',
+                            'indent',
+                            'outdent',
+                            '|',
+                            'imageUpload',
+                            'mediaEmbed',
+                            'link',
+                            '|',
+                            'undo',
+                            'redo',
+                            'code',
+                            '|'
+                        ]
+                    },
+                    language: 'ko',
+                    image: {
+                        toolbar: [
+                            'imageTextAlternative',
+                            'imageStyle:full',
+                            'imageStyle:side'
+                        ]
+                    },
+                    table: {
+                        contentToolbar: [
+                            'tableColumn',
+                            'tableRow',
+                            'mergeTableCells'
+                        ]
+                    },
+                    licenseKey: '',
+
+                })
+                .then(editor => {
+                    window.contentDetail = editor;
+                    // After mounting the application change the height
+                    editor.editing.view.change(writer => {
+                        writer.setStyle('height', '250px', editor.editing.view.document.getRoot());
+                    });
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+
+            //검색버튼
+            $("#btnSearch").click(fnSearch);
+
+            //저장
+            $("#btnSave").click(regAndMod);
+
+            //검색 초기화
+            $("#btnSearchReset").click(function(){
+               // $("#resvesForm")[0].reset()
+            });
+
+            //초기화
+            $("#boardReset").click(function(){
+                $("#Subject").val("");
+                window.contentDetail.setData("");
+                $("#BoNum").val("");
+            });
+        });
+
+        //검색
+        var fnSearch = function () {
+            var startDate = $("#startDate").val();
+            var endDate = $("#endDate").val();
+            if (!COMMON.util.isDate(startDate) || !COMMON.util.isDate(endDate)) {
+                alert("정확한 날짜를 입력해주세요.")
+                return false;
+            }
+
+            $("#grid-data").bootgrid({
+                templates: {search: ""},
+                labels: {infos: '<strong class="text-primary"> {{ctx.total}}</strong>건이 검색되었습니다.'},
+                ajax: true,
+                ajaxSettings: {
+                    contentType: "application/json",
+                    method: "POST",
+                    cache: false,
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader(header, token);
+                    },
+                },
+                url: "/api/bbs/management/list",
+                formatters: {
+                    "link": function (column, row) {
+                        return '<a href="#" onclick="gotoDetail(' + row.BoNum + ', this)">' + row.BoNum + '</a>';
+                    },
+                    "ukdate": function (column, row) {
+                        return moment.utc(row[column.id]).format('YYYY-MM-DD HH:mm');
+                    }
+                },
+                requestHandler: function (request) {
+                    var param = {
+                        Current: request.current,
+                        RowCount: request.rowCount,
+                        startDate: startDate,
+                        endDate: endDate,
+                        title: $("#title").val()
+                    };
+
+                    for (var key in request.sort) {
+                        param.SortBy = key;
+                        param.SortDirection = request.sort[key];
+                    }
+
+                    return JSON.stringify(param);
+                }
+            });
+        }
+
+        //상세페이지 이동
+        var gotoDetail = function (boNum, obj) {
+            var param = {BoNum: boNum};
+            var params = {
+                url: "/api/bbs/management/detail",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(param),
+                success: function (data) {
+
+                    with (data.rows) {
+                        $("#Subject").val(Subject);
+                        $("#BoCate").val(BoCate);
+                        window.contentDetail.setData(Content);
+                        $("#BoNum").val(BoNum);
+                    }
+                }
+            };
+
+            COMMON.ajaxSyncJson(params);
+
+        }
+
+        //저장
+        var regAndMod = function () {
+            var $form = $("#boardFrom");
+            var param = Medea.formobject($form);
+            param.Content = window.contentDetail.getData();
+
+            console.log(param);
+            if (confirm("저장 하시겠습니까?")) {
+                var params = {
+                    url: "/api/bbs/management/save",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(param),
+                    success: function (data) {
+                        console.log(data)
+                        if (data.code != "200") {
+                            alert(data.message);
+                        } else {
+                            alert("정상처리 되었습니다.");
+                            $("#boardReset").click();
+                            fnSearch();
+                        }
+                    }
+                };
+
+                COMMON.ajaxSyncJson(params);
+            }
+        }
+    </script>
+</th:block>
+</html>

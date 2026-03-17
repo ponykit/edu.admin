@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      class="smart-style-0">
+
+<th:block layout:replace="~{fragments/head}"/>
+
+<body class="smart-style-0">
+
+<th:block layout:replace="~{fragments/fixed-navbar}"/>
+
+<th:block layout:replace="~{fragments/aside}"/>
+
+
+<!-- MAIN PANEL -->
+<div id="main" role="main">
+    <div id="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="well well-sm well-light" style="height:100%">
+                    <div id="tabs">
+                        <ul id="tabheader"></ul>
+                        <div id="tabbody"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="divLiTemplate" style="display:none">
+        <li style="position:relative;" data-itemid="{ItemID}">
+        <span class="air air-top-left delete-tab" style="top:7px; left:7px;">
+            <button class="btn btn-xs font-xs btn-default hover-transparent">
+                <i class="fa fa-times"></i>
+            </button>
+        </span><span class="air air-top-left" style="top:7px; left:30px;">
+            <button class="btn btn-xs font-xs btn-default hover-transparent"
+                    onclick="javascript: BaseTab.NewWindow('{Url}')">
+                <i class="fa fa-expand"></i>
+            </button>
+        </span><a href="#{Href}" style="padding-left:55px;">{Title}</a>
+        </li>
+    </div>
+
+    <div id="divBodyTemplate" style="display:none">
+        <div id="{TabID}" style="padding:0px;">
+            <div style="padding:10px;">
+                <h1 class="txt-color-blueDark">
+                    <i class="fa fa-list-alt fa-fw "></i>
+                    {LocLabel}
+                </h1>
+            </div>
+            {IFrame}
+        </div>
+    </div>
+</div>
+<!-- END MAIN PANEL -->
+
+<!-- Footer -->
+<th:block layout:replace="~{fragments/footer}"/>
+<!--    &lt;!&ndash; Footer ends &ndash;&gt;-->
+
+<th:block layout:replace="~{fragments/bottom-scripts}"/>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        initApp.leftNav.close
+        BaseTab.Init(1, 15);
+        $("nav a[href='#']:eq(0)").click();
+    });
+
+    var BaseTab = {
+        TabNum: 1,
+        MinCount: 0,
+        MaxCount: 0,
+        HeadTemplate: "",
+        BodyTemplate: "",
+        Init: function (mincnt, maxcnt) {
+            BaseTab.MinCount = mincnt;
+            BaseTab.MaxCount = maxcnt;
+            BaseTab.HeadTemplate = $("#divLiTemplate").html();
+            BaseTab.BodyTemplate = $("#divBodyTemplate").html();
+
+            $("#tabs").on("click", 'span.delete-tab', function () {
+                if ($("#tabs ul:first li").length == BaseTab.MinCount) {
+                    alert('탭은 반드시 1개 이상 있어야 합니다.');
+
+                } else {
+                    $(this).closest("li").remove();
+                    $($(this).parent().find("a").attr("href")).remove();
+                    $("#tabs").tabs().tabs("refresh");
+                }
+            });
+        },
+        AddTab: function (tabLabel, itemId, url, obj, viewNavi) {
+            var locLabel = "";
+            $("nav li.active").removeClass("active");
+            $(obj).closest("li").addClass("active");
+
+            if (viewNavi == undefined) {
+                locLabel = $.map($(".open > a[href='#']"), function (n, i) {
+                    return $(n).text();
+                });
+                if (obj) {
+                    locLabel.push($(obj).text());
+                } else {
+                    locLabel.push(tabLabel);
+                }
+            } else {
+                locLabel = viewNavi.split(",");
+            }
+
+            var tabs = $("#tabs").tabs();
+
+            var showtabidx = -1;
+            $("#tabs ul:first li").each(function (index) {
+                var tabitemId = $(this).attr("data-itemid");
+                if (itemId == tabitemId) {
+                    showtabidx = index;
+                    ;
+                    return false;
+                }
+            });
+            if (showtabidx > -1) {
+                $("#tabs").tabs({active: showtabidx});
+                return;
+            }
+
+            var tabCounter = $("#tabs ul:first li").length;
+            if (tabCounter >= BaseTab.MaxCount) {
+                alert("탭은 " + BaseTab.MaxCount + "개 까지만 추가 가능합니다.");
+                return;
+            }
+
+            var tabid = "";
+            var iframeid = "iframe" + BaseTab.TabNum;
+            var liHtml = "";
+            liHtml = BaseTab.HeadTemplate.format({
+                ItemID: itemId,
+                Url: url,
+                Href: "tab" + BaseTab.TabNum,
+                Title: tabLabel
+            });
+
+            var tabContentHtml = "<iframe onload='BaseTab.FullHResize(this)' onresize='BaseTab.FullHResize(this)' width='100%' height='1000px' frameborder='0' style='overflow:hidden;'"
+                + " src='" + url + "' id='" + iframeid + "' name='" + iframeid + "'></iframe>";
+
+            var bodyHtml = "";
+            bodyHtml = BaseTab.BodyTemplate.format({
+                TabID: "tab" + BaseTab.TabNum,
+                IFrame: tabContentHtml,
+                LocLabel: locLabel.join(" > ")
+            });
+
+            tabs.find("#tabheader").append(liHtml);
+            tabs.find("#tabbody").append(bodyHtml);
+
+            tabs.tabs("refresh");
+            tabs.tabs({active: tabCounter});
+            BaseTab.TabNum++;
+        },
+        RemoveTab: function (itemId) {
+            if ($("#tabs ul:first li").length == BaseTab.MinCount) {
+                alert('탭은 반드시 1개 이상 있어야 합니다.');
+            }
+
+            var tabs = $("#tabs").tabs();
+            $("#tabs ul:first li").each(function (index) {
+                var tabitemId = $(this).attr("data-itemid");
+                if (itemId == tabitemId) {
+                    $(this).closest("li").remove();
+                    $($(this).parent().find("a").attr("href")).remove();
+                    $("#tabs").tabs().tabs("refresh");
+                }
+            });
+        },
+        NewWindow: function (url) {
+            window.open(url, "", "");
+            return false;
+        },
+        FullHResize: function (i) {
+            var iframeHeight = (i).contentWindow.document.body.scrollHeight;
+            if (i.src.indexOf('14') !== -1) iframeHeight = 1450;
+            if (iframeHeight > 1000) (i).height = iframeHeight;
+        }
+    };
+
+    String.prototype.format = function (args) {
+        var newStr = this;
+        for (var key in args) {
+            newStr = newStr.replace(new RegExp('{' + key + '}', 'g'), args[key]);
+        }
+        return newStr;
+    }
+</script>
+
+</body>
+
+</html>
+
